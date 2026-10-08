@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admissions — Greenfield College</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <a href="index.html" class="brand">Greenfield College</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="admissions.html" aria-current="page">Admissions</a>
+      <a href="academics.html">Academics</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="page-content">
+    <section class="hero">
+      <h1>Admissions</h1>
+      <p>Everything you need to know to apply to Greenfield College.</p>
+    </section>
+
+    <div class="card">
+      <h2>Eligibility</h2>
+      <p>
+        Candidates must have completed higher secondary education (10+2)
+        with a minimum of 60% aggregate marks in the relevant stream.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>How to Apply</h2>
+      <p>
+        Fill out the online application, upload required documents, pay the
+        application fee, and appear for the entrance test or submit
+        qualifying exam scores.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Need More Detail?</h2>
+      <p class="muted">
+        For specific dates, document checklists, or scholarship
+        eligibility, ask our chat assistant in the bottom-right corner —
+        it's connected to the latest admissions information.
+      </p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="year"></span> Greenfield College. All rights reserved. |
+      Need help? Use the chat assistant in the bottom-right corner.</p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="assets/js/chat-widget.js"></script>
+</body>
+</html>

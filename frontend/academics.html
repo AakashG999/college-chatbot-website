@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academics — Greenfield College</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <a href="index.html" class="brand">Greenfield College</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="admissions.html">Admissions</a>
+      <a href="academics.html" aria-current="page">Academics</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="page-content">
+    <section class="hero">
+      <h1>Academics</h1>
+      <p>Semester structure, grading, and academic policies.</p>
+    </section>
+
+    <div class="card">
+      <h2>Semester Structure</h2>
+      <p>
+        The academic year runs across two semesters: Odd (August–December)
+        and Even (January–May).
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Grading & Attendance</h2>
+      <p>
+        A 10-point CGPA grading system is used. A minimum of 75% attendance
+        is required to sit for semester-end exams.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Questions About Exams or Electives?</h2>
+      <p class="muted">
+        Ask the chat assistant about exam schedules, revaluation, backlog
+        policies, or elective registration.
+      </p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="year"></span> Greenfield College. All rights reserved. |
+      Need help? Use the chat assistant in the bottom-right corner.</p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="assets/js/chat-widget.js"></script>
+</body>
+</html>

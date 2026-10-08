@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greenfield College</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <a href="index.html" class="brand">Greenfield College</a>
+    <nav>
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="admissions.html">Admissions</a>
+      <a href="academics.html">Academics</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="page-content">
+    <section class="hero">
+      <h1>Welcome to Greenfield College</h1>
+      <p>
+        A premier institution for undergraduate and postgraduate education.
+        Have a question about admissions, fees, or campus life? Click the
+        chat icon in the corner — our AI assistant can help instantly.
+      </p>
+    </section>
+
+    <div class="card-grid">
+      <div class="card">
+        <h2>Admissions Open</h2>
+        <p class="muted">
+          Applications for the upcoming academic year are now open. Visit
+          the Admissions page for eligibility, dates, and how to apply.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Scholarships Available</h2>
+        <p class="muted">
+          Merit-based and need-based scholarships are available for
+          eligible students. Ask the chatbot or visit our Admissions page
+          for details.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Campus Life</h2>
+        <p class="muted">
+          State-of-the-art library, sports complex, hostel facilities, and
+          a vibrant student community await you on campus.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="year"></span> Greenfield College. All rights reserved. |
+      Need help? Use the chat assistant in the bottom-right corner.</p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="assets/js/chat-widget.js"></script>
+</body>
+</html>

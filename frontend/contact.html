@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Greenfield College</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <a href="index.html" class="brand">Greenfield College</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="admissions.html">Admissions</a>
+      <a href="academics.html">Academics</a>
+      <a href="contact.html" aria-current="page">Contact</a>
+    </nav>
+  </header>
+
+  <main class="page-content">
+    <section class="hero">
+      <h1>Contact Administration</h1>
+      <p>Reach the right office directly, or ask our chat assistant.</p>
+    </section>
+
+    <div class="card-grid">
+      <div class="card">
+        <h2>Admissions Office</h2>
+        <p class="muted">admissions@college.edu<br />+91-11-2345-6789</p>
+      </div>
+      <div class="card">
+        <h2>Accounts Office</h2>
+        <p class="muted">accounts@college.edu<br />+91-11-2345-6790</p>
+      </div>
+      <div class="card">
+        <h2>Dean of Academics</h2>
+        <p class="muted">academics@college.edu<br />+91-11-2345-6791</p>
+      </div>
+      <div class="card">
+        <h2>Examination Cell</h2>
+        <p class="muted">exams@college.edu<br />+91-11-2345-6792</p>
+      </div>
+      <div class="card">
+        <h2>Hostel Office</h2>
+        <p class="muted">hostel@college.edu<br />+91-11-2345-6793</p>
+      </div>
+      <div class="card">
+        <h2>IT Helpdesk</h2>
+        <p class="muted">ithelp@college.edu<br />+91-11-2345-6795</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="year"></span> Greenfield College. All rights reserved. |
+      Need help? Use the chat assistant in the bottom-right corner.</p>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="assets/js/chat-widget.js"></script>
+</body>
+</html>

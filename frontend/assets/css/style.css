@@ -1,0 +1,936 @@
+:root {
+  --color-primary: #1d4ed8;
+  --color-primary-dark: #1e3a8a;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page-content {
+  flex: 1;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* Navbar */
+.navbar {
+  background: var(--color-primary-dark);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.navbar .brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: white;
+  text-decoration: none;
+}
+
+.navbar nav {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.navbar nav a {
+  color: #dbeafe;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.navbar nav a:hover,
+.navbar nav a[aria-current="page"] {
+  color: white;
+  text-decoration: underline;
+}
+
+/* Footer */
+.footer {
+  background: #0f172a;
+  color: #94a3b8;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.85rem;
+}
+
+/* Generic page sections */
+.hero {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.hero h1 {
+  margin-top: 0;
+  font-size: 2rem;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: var(--color-primary-dark);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* Chat widget */
+.chat-launcher {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+  z-index: 50;
+  /* `both` keeps it hidden through the delay, so it arrives after the page
+     has settled rather than flashing in at first paint. */
+  animation: chat-launcher-in 760ms cubic-bezier(0.22, 1.15, 0.36, 1) 350ms both;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.chat-launcher:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 26px rgba(29, 78, 216, 0.4);
+}
+
+/* Rises, slightly overshoots, settles. The small dip at 72% is what makes
+   it read as "placed" rather than "popped". */
+@keyframes chat-launcher-in {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scale(0.45);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-7px) scale(1.12);
+  }
+  72% {
+    transform: translateY(2px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Once the entrance has played, drop the animation entirely. Without this,
+   anything that changes the `animation` property later (adding then removing
+   .nudge) re-triggers the entrance, and the held fill state also beats the
+   :hover transform. JS adds .landed on animationend. */
+.chat-launcher.landed {
+  animation: none;
+}
+
+/* A single gentle tilt, fired once from JS if the chat still hasn't been
+   opened. Enough to catch the eye in peripheral vision; no looping. */
+.chat-launcher.landed.nudge {
+  animation: chat-launcher-nudge 900ms ease-in-out;
+}
+
+@keyframes chat-launcher-nudge {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  18% {
+    transform: rotate(-9deg) scale(1.07);
+  }
+  36% {
+    transform: rotate(7deg) scale(1.07);
+  }
+  54% {
+    transform: rotate(-4deg) scale(1.03);
+  }
+  72% {
+    transform: rotate(2deg) scale(1.01);
+  }
+}
+
+/* Soft glow bloom (::before) behind a thin ring (::after). Two layers at
+   low opacity read as a calm pulse; a single hard ring reads as an alert. */
+.chat-launcher::before,
+.chat-launcher::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.chat-launcher::before {
+  inset: -8px;
+  background: radial-gradient(
+    circle,
+    rgba(29, 78, 216, 0.33) 0%,
+    rgba(29, 78, 216, 0) 70%
+  );
+  animation: chat-launcher-halo 2.8s ease-out 1.15s 3 both;
+}
+
+.chat-launcher::after {
+  inset: 0;
+  border: 2px solid rgba(29, 78, 216, 0.45);
+  animation: chat-launcher-ring 2.8s ease-out 1.15s 3 both;
+}
+
+@keyframes chat-launcher-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  30% {
+    opacity: 0.6;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes chat-launcher-ring {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* Stop drawing attention once the chat has been opened. */
+.chat-window.open + .chat-launcher::before,
+.chat-window.open + .chat-launcher::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* Small "Need help?" bubble beside the launcher. Shown once per tab
+   session, auto-dismisses, and never covers the launcher itself. */
+.chat-peek {
+  position: fixed;
+  right: 5.6rem;
+  bottom: 2.1rem;
+  z-index: 49;
+  max-width: 225px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  transform: translateX(12px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 340ms ease,
+    transform 340ms cubic-bezier(0.22, 1.15, 0.36, 1);
+}
+
+.chat-peek.show {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Tail pointing at the launcher. */
+.chat-peek::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  bottom: 16px;
+  width: 11px;
+  height: 11px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  transform: rotate(45deg);
+}
+
+.chat-peek-close {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-peek-close:hover {
+  color: var(--color-text);
+}
+
+/* Too cramped to be welcome on a phone. */
+@media (max-width: 480px) {
+  .chat-peek {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-launcher,
+  .chat-launcher:hover,
+  .chat-launcher.landed.nudge {
+    animation: none;
+    transform: none;
+  }
+  .chat-launcher::before,
+  .chat-launcher::after {
+    display: none;
+  }
+  .chat-peek {
+    transition: opacity 200ms ease;
+    transform: none;
+  }
+  .chat-peek.show {
+    transform: none;
+  }
+}
+
+.chat-window {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.5rem;
+  width: 360px;
+  max-width: calc(100vw - 2rem);
+  height: 480px;
+  max-height: calc(100vh - 8rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.chat-window.open {
+  display: flex;
+}
+
+.chat-header {
+  background: var(--color-primary-dark);
+  color: white;
+  padding: 0.85rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.chat-header button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chat-header .chat-logout {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #dbeafe;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.chat-header .chat-logout:hover {
+  color: white;
+}
+
+/* Demo sign-in panel (roll number -> OTP), shown in place of the
+   message list until verification completes. */
+.chat-auth {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.chat-auth-intro {
+  margin: 0 0 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.chat-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.chat-auth-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.chat-auth-form input {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 1rem;
+  /* Digit entry reads much better spaced out than normal prose. */
+  letter-spacing: 0.18em;
+}
+
+.chat-auth-form input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.chat-auth-form button {
+  margin-top: 0.3rem;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.chat-auth-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chat-auth-error {
+  margin: 0.7rem 0 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.8rem;
+}
+
+.chat-auth-demo {
+  margin: 0.7rem 0 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: #fef9c3;
+  color: #854d0e;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+/* "or" rule between the OTP form and the guest button. */
+.chat-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0.7rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.chat-auth-divider::before,
+.chat-auth-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--color-border);
+}
+
+.chat-auth-guest {
+  width: 100%;
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.chat-auth-guest:hover:not(:disabled) {
+  background: #eef2ff;
+}
+
+.chat-auth-guest:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chat-auth-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--color-muted);
+}
+
+.chat-auth-link {
+  margin-top: 0.7rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: var(--color-primary);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.chat-bubble.assistant {
+  align-self: flex-start;
+  background: #eef2ff;
+  color: var(--color-text);
+  border-bottom-left-radius: 2px;
+}
+
+/* Rendered Markdown inside assistant replies.
+   Spacing is deliberately tight -- these elements sit in a 360px bubble,
+   so default browser margins leave the text looking full of holes. */
+.chat-bubble.markdown {
+  /* Block elements handle their own spacing; pre-wrap would add the
+     source newlines back on top and double the gaps. */
+  white-space: normal;
+}
+
+.chat-bubble.markdown > *:first-child {
+  margin-top: 0;
+}
+
+.chat-bubble.markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.chat-bubble.markdown p {
+  margin: 0 0 0.5rem;
+}
+
+.chat-bubble.markdown h3,
+.chat-bubble.markdown h4,
+.chat-bubble.markdown h5,
+.chat-bubble.markdown h6 {
+  margin: 0.7rem 0 0.3rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.chat-bubble.markdown ul,
+.chat-bubble.markdown ol {
+  margin: 0 0 0.5rem;
+  padding-left: 1.15rem;
+}
+
+.chat-bubble.markdown li {
+  margin-bottom: 0.2rem;
+}
+
+.chat-bubble.markdown code {
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
+.chat-bubble.markdown a {
+  color: var(--color-primary);
+  /* Long emails and URLs must not push the bubble wider than the window. */
+  word-break: break-word;
+}
+
+.chat-bubble.markdown blockquote {
+  margin: 0 0 0.5rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+.chat-bubble.markdown hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0.6rem 0;
+}
+
+/* Tables (the fees, grading, and contacts docs all use them) scroll
+   sideways rather than stretching the bubble. */
+.chat-bubble.markdown .table-wrap {
+  overflow-x: auto;
+  margin: 0 0 0.5rem;
+}
+
+.chat-bubble.markdown table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.chat-bubble.markdown th,
+.chat-bubble.markdown td {
+  border: 1px solid var(--color-border);
+  padding: 0.25rem 0.45rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.chat-bubble.markdown th {
+  background: rgba(29, 78, 216, 0.08);
+  font-weight: 600;
+}
+
+.chat-bubble.error {
+  align-self: flex-start;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Caret trailing the answer while it's being written. */
+.chat-caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--color-primary);
+  animation: chat-caret-blink 1s steps(2, start) infinite;
+}
+
+@keyframes chat-caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-caret {
+    animation: none;
+  }
+}
+
+/* Suggested follow-up chips at the end of the conversation. */
+.chat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: 0.15rem;
+}
+
+.chat-chips-label {
+  width: 100%;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin-bottom: 0.1rem;
+}
+
+.chat-chip {
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.chat-chip:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.chat-chip:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-chip,
+  .chat-chip:hover {
+    transform: none;
+  }
+}
+
+/* Live pipeline status ("Searching the fees documents…") while a reply
+   is being generated. The label is driven by real graph node events. */
+.chat-bubble.chat-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.chat-status-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+
+.chat-status-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  animation: chat-dot 1.1s ease-in-out infinite;
+}
+
+.chat-status-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-status-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes chat-dot {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-status-dots i {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+/* Thumbs up / down under each answer, and the dislike follow-up form. */
+.chat-feedback {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.chat-feedback-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chat-feedback-label {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  margin-right: auto;
+}
+
+.chat-feedback-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.chat-feedback-btn:hover {
+  opacity: 1;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+/* A chosen thumb stays visible and highlighted -- tapping it again undoes. */
+.chat-feedback-btn.selected {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background: rgba(29, 78, 216, 0.14);
+  transform: scale(1.05);
+}
+
+.chat-feedback-btn:disabled {
+  cursor: progress;
+  opacity: 0.4;
+}
+
+.chat-feedback-ack {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.chat-feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.55rem;
+}
+
+.chat-feedback-flabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.chat-feedback-form textarea,
+.chat-feedback-form input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.chat-feedback-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.chat-feedback-submit {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.chat-feedback-cancel {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--color-muted);
+}
+
+.chat-feedback-submit:disabled,
+.chat-feedback-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chat-feedback-error {
+  margin: 0.1rem 0 0;
+  font-size: 0.73rem;
+  color: #991b1b;
+}
+
+.chat-input-row {
+  display: flex;
+  border-top: 1px solid var(--color-border);
+  padding: 0.6rem;
+  gap: 0.5rem;
+}
+
+.chat-input-row input {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.chat-input-row button {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.chat-input-row button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
