@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from langchain_core.messages import HumanMessage, AIMessage
 
 from app.agents.graph import college_chatbot_graph
-from app.suggestions import STARTER_SUGGESTIONS, suggestions_for
+from app.suggestions import STARTER_SUGGESTIONS, suggestions_for_categories
 
 router = APIRouter()
 
@@ -23,10 +23,26 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    # The main topic -- categories[0]. Kept for existing clients.
     category: str
+    # Every topic the question touched; more than one for multi-intent
+    # questions such as "hostel fees and exam dates?".
+    categories: list[str] = []
     sources: list[str]
-    # Follow-up question chips, picked from the routed category.
+    # Follow-up question chips, picked from the routed categories.
     suggestions: list[str] = []
+
+
+def _describe_topics(categories: list[str]) -> str:
+    """["hostel", "exams", "fees"] -> "hostel, exams and fees"."""
+    if len(categories) <= 1:
+        return categories[0] if categories else "relevant"
+    return ", ".join(categories[:-1]) + " and " + categories[-1]
+
+
+def _asked_questions(request: ChatRequest) -> list[str]:
+    """Everything the student has asked so far, this message included."""
+    return [t.content for t in request.history if t.role == "user"] + [request.message]
 
 
 def _to_lc_messages(history: list[ChatTurn]):
@@ -53,12 +69,13 @@ def chat(request: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=502, detail=f"Chatbot agent failed: {exc}") from exc
 
     reply = result["messages"][-1].content
-    category = result.get("category", "contact")
+    categories = result.get("categories") or [result.get("category", "contact")]
     return ChatResponse(
         reply=reply,
-        category=category,
+        category=categories[0],
+        categories=categories,
         sources=result.get("sources", []),
-        suggestions=suggestions_for(category),
+        suggestions=suggestions_for_categories(categories, _asked_questions(request)),
     )
 
 
@@ -78,7 +95,7 @@ def chat_stream(request: ChatRequest):
     node that is about to run:
 
         (start)          -> "Understanding your question"
-        router done      -> "Searching the <category> documents"
+        router done      -> "Searching the <categories> documents"
         retrieve done    -> "Collating <n> sources and writing your answer"
         answer done      -> final payload
 
@@ -127,10 +144,10 @@ def chat_stream(request: ChatRequest):
                     state.update(payload or {})
 
                     if node == "router":
-                        category = state.get("category", "relevant")
+                        topics = _describe_topics(state.get("categories") or [])
                         yield event({
                             "type": "status",
-                            "label": f"Searching the {category} documents",
+                            "label": f"Searching the {topics} documents",
                         })
                     elif node == "retrieve":
                         count = len(state.get("sources") or [])
@@ -148,13 +165,14 @@ def chat_stream(request: ChatRequest):
             yield event({"type": "error", "detail": "The agent produced no answer."})
             return
 
-        category = state.get("category", "contact")
+        categories = state.get("categories") or [state.get("category", "contact")]
         yield event({
             "type": "done",
             "reply": reply_messages[-1].content,
-            "category": category,
+            "category": categories[0],
+            "categories": categories,
             "sources": state.get("sources", []),
-            "suggestions": suggestions_for(category),
+            "suggestions": suggestions_for_categories(categories, _asked_questions(request)),
         })
 
     return StreamingResponse(

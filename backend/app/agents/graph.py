@@ -4,14 +4,18 @@ Graph shape:
 
     START -> router_node -> retrieve_node -> answer_node -> END
 
-- router_node: an LLM agent that classifies the incoming question into a
-  college-admin category (admissions, fees, academics, exams, hostel, contact).
-- retrieve_node: performs RAG retrieval against the Chroma vector store,
-  filtered by the routed category, falling back to an unfiltered search if
-  nothing relevant is found in that category.
+- router_node: an LLM agent that classifies the incoming question into one
+  or more college-admin categories (admissions, fees, exams, hostel, ...).
+  A question like "hostel fees and exam dates?" is multi-intent and routes
+  to every topic it touches, most relevant first.
+- retrieve_node: performs RAG retrieval against the Chroma vector store once
+  per routed category, merging the results, and falls back to an unfiltered
+  search if nothing relevant is found in any of them.
 - answer_node: an LLM agent that composes the final answer strictly from the
-  retrieved context plus the running conversation history.
+  retrieved context plus the running conversation history, covering every
+  part of a multi-intent question.
 """
+import re
 from typing import TypedDict, Annotated
 
 from langgraph.graph import StateGraph, START, END
@@ -23,8 +27,22 @@ from app.agents.prompts import ROUTER_SYSTEM_PROMPT, ANSWER_SYSTEM_PROMPT
 from app.rag.retriever import retrieve, VALID_CATEGORIES
 
 
+# A question rarely spans more than a few topics; past this, the per-topic
+# retrieval budget gets too thin to be useful.
+MAX_INTENTS = 3
+
+# Chunks per question, split across its categories (never fewer than
+# MIN_CHUNKS_PER_CATEGORY each), so a multi-intent question doesn't flood
+# the answer prompt.
+TOTAL_CHUNKS = 6
+MIN_CHUNKS_PER_CATEGORY = 2
+
+
 class ChatState(TypedDict):
     messages: Annotated[list, add_messages]
+    # Every topic the question touches, most relevant first.
+    categories: list[str]
+    # categories[0] -- kept for callers that only want the main topic.
     category: str
     context: str
     sources: list[str]
@@ -49,6 +67,18 @@ def _llm(temperature: float = 0.0):
     )
 
 
+def parse_categories(raw: str) -> list[str]:
+    """Turn the router's reply ("hostel, exams") into valid, de-duplicated
+    categories in the order given. Anything unrecognised is dropped; if
+    nothing survives, the question goes to the catch-all "contact"."""
+    categories = []
+    for token in re.split(r"[\s,;]+", raw.strip().lower()):
+        token = token.strip(".`'\"-")
+        if token in VALID_CATEGORIES and token not in categories:
+            categories.append(token)
+    return categories[:MAX_INTENTS] or ["contact"]
+
+
 def router_node(state: ChatState) -> dict:
     last_user_message = state["messages"][-1].content
     response = _llm().invoke(
@@ -57,17 +87,28 @@ def router_node(state: ChatState) -> dict:
             HumanMessage(content=last_user_message),
         ]
     )
-    category = response.content.strip().lower()
-    if category not in VALID_CATEGORIES:
-        category = "contact"
-    return {"category": category}
+    categories = parse_categories(response.content)
+    return {"categories": categories, "category": categories[0]}
 
 
 def retrieve_node(state: ChatState) -> dict:
     last_user_message = state["messages"][-1].content
-    category = state.get("category")
+    categories = state.get("categories") or [state.get("category") or "contact"]
 
-    docs = retrieve(last_user_message, category=category, k=4)
+    # One filtered search per topic, so a two-part question gets material
+    # for both parts instead of only whichever topic dominates the embedding.
+    if len(categories) == 1:
+        k = 4  # same as before multi-intent support
+    else:
+        k = max(MIN_CHUNKS_PER_CATEGORY, TOTAL_CHUNKS // len(categories))
+    docs, seen = [], set()
+    for category in categories:
+        for d in retrieve(last_user_message, category=category, k=k):
+            key = (d.metadata.get("source"), d.page_content)
+            if key not in seen:
+                seen.add(key)
+                docs.append(d)
+
     if not docs:
         # Fall back to an unfiltered search across the whole knowledge base.
         docs = retrieve(last_user_message, category=None, k=4)
