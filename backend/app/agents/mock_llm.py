@@ -2,9 +2,12 @@
 USE_MOCK_LLM=true, so the LangGraph pipeline (router -> retrieve -> answer)
 can be run end-to-end with no API key and no network access.
 
-- Routing is done with simple keyword matching instead of an LLM call.
-- The "answer" is extractive: it returns the top retrieved excerpt verbatim
-  with a [MOCK MODE] label, rather than a generated, synthesized response.
+- Routing is done with simple keyword matching instead of an LLM call. Every
+  category with a keyword hit is returned (most hits first, ties broken by
+  where the topic is mentioned), so multi-intent questions route to several.
+- The "answer" is extractive: it returns the top retrieved excerpt for each
+  routed category verbatim with a [MOCK MODE] label, rather than a
+  generated, synthesized response.
 
 This is for local wiring/retrieval testing only. Swap back to the real
 ChatOpenAI path (the default when USE_MOCK_LLM is unset) for actual answer
@@ -53,14 +56,19 @@ class MockChatModel:
             return AIMessage(content=self._classify(last_human))
         return AIMessage(content=self._answer(last_human))
 
-    def _classify(self, question: str) -> str:
+    def _classify(self, question: str, limit: int = 3) -> str:
         q = question.lower()
-        best_category, best_hits = "contact", 0
+        scored = []
         for category, keywords in CATEGORY_KEYWORDS.items():
-            hits = sum(1 for kw in keywords if kw in q)
-            if hits > best_hits:
-                best_category, best_hits = category, hits
-        return best_category
+            positions = [q.find(kw) for kw in keywords if kw in q]
+            if positions:
+                # "contact" is the catch-all, so it loses ties to real topics.
+                scored.append(
+                    (-len(positions), category == "contact", min(positions), category)
+                )
+        if not scored:
+            return "contact"
+        return ", ".join(category for *_, category in sorted(scored)[:limit])
 
     def _answer(self, prompt_text: str) -> str:
         # answer_node builds the human prompt as:
@@ -77,8 +85,17 @@ class MockChatModel:
                 "knowledge base for this question."
             )
 
-        top_excerpt = context_part.split("\n\n---\n\n")[0].strip()
+        # retrieve_node lists excerpts grouped by category, best first, each
+        # headed "[source: ... | category: <c>]". Take the top one per
+        # category so every part of a multi-intent question is answered.
+        excerpts, seen = [], set()
+        for excerpt in context_part.split("\n\n---\n\n"):
+            header = excerpt.strip().split("\n", 1)[0]
+            category = header.rsplit("category:", 1)[-1].strip(" ]")
+            if category not in seen:
+                seen.add(category)
+                excerpts.append(excerpt.strip())
         return (
             "[MOCK MODE — extractive stand-in, not a real LLM response]\n\n"
-            f"{top_excerpt}"
+            + "\n\n---\n\n".join(excerpts)
         )
