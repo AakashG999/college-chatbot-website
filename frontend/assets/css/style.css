@@ -934,3 +934,94 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Phones: the chat takes over the whole screen instead of floating.
+   Kept at the end of the file so it overrides the desktop rules above.
+   The 640px breakpoint must match MOBILE_QUERY in chat-widget.js. */
+@media (max-width: 640px) {
+  .chat-window {
+    /* --chat-vv-* track the visual viewport (set from JS), so the window
+       shrinks to sit above the on-screen keyboard instead of behind it. */
+    top: var(--chat-vv-top, 0);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: var(--chat-vv-height, 100dvh);
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 60;
+  }
+
+  /* The header × closes it; the floating button would sit on the input. */
+  .chat-window.open + .chat-launcher {
+    display: none;
+  }
+
+  /* Stop the page behind from scrolling while the chat covers it. */
+  html.chat-open,
+  html.chat-open body {
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding-top: calc(0.85rem + env(safe-area-inset-top));
+    padding-left: calc(1rem + env(safe-area-inset-left));
+    padding-right: calc(1rem + env(safe-area-inset-right));
+  }
+
+  /* Comfortable tap target for the close button. */
+  .chat-header button:not(.chat-logout) {
+    min-width: 44px;
+    min-height: 44px;
+    margin: -0.5rem -0.75rem -0.5rem 0;
+    font-size: 1.6rem;
+  }
+
+  .chat-input-row {
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    padding-left: calc(0.6rem + env(safe-area-inset-left));
+    padding-right: calc(0.6rem + env(safe-area-inset-right));
+  }
+
+  /* iOS zooms the page into any input under 16px when it's focused. */
+  .chat-input-row input,
+  .chat-auth-form input,
+  .chat-feedback-form textarea,
+  .chat-feedback-form input {
+    font-size: 16px;
+  }
+
+  .chat-bubble {
+    max-width: 90%;
+  }
+
+  /* Site pages */
+  .navbar {
+    padding: 0.85rem 1rem;
+  }
+
+  .navbar nav {
+    gap: 0.5rem 1rem;
+  }
+
+  .page-content {
+    padding: 1.25rem 1rem 5.5rem; /* bottom clears the chat launcher */
+  }
+
+  .hero {
+    padding: 2rem 1.25rem;
+  }
+
+  .hero h1 {
+    font-size: 1.6rem;
+  }
+
+  .card {
+    padding: 1.15rem;
+  }
+}
